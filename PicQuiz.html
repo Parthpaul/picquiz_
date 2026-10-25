@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>PicQuiz</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap">
+<style>
+:root{
+  --bg:#F6F4FF; --card:#FFFFFF; --ink:#1E1A3C; --muted:#6D6890; --line:#DAD5F5;
+  --accent:#5B3DF5; --ok:#17A589; --no:#F0505A; --sun:#FFC933;
+  box-sizing:border-box; padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#14112B;--card:#211C40;--ink:#F3EFFF;--muted:#A9A3CC;--line:#383063;--accent:#8C78FF}}
+:root[data-theme="dark"]{--bg:#14112B;--card:#211C40;--ink:#F3EFFF;--muted:#A9A3CC;--line:#383063;--accent:#8C78FF}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Fredoka",ui-rounded,"Trebuchet MS","Segoe UI",sans-serif;font-size:17px;line-height:1.4;min-height:100vh}
+main{max-width:640px;margin:0 auto;padding:18px 16px 40px}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,input:focus-visible,label:focus-within{outline:3px solid var(--accent);outline-offset:2px}
+.hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+.logo{font-size:1.7rem;font-weight:700;letter-spacing:-.02em}
+.logo b{color:var(--accent)}
+.chip{border:2px solid var(--line);background:var(--card);border-radius:999px;padding:6px 14px;min-height:40px;font-size:.9rem;font-weight:500}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:12px}
+.stat{background:var(--card);border:2px solid var(--line);border-radius:18px;padding:12px;text-align:center}
+.stat b{display:block;font-size:1.7rem;line-height:1.1;color:var(--accent)}
+.stat span{font-size:.85rem;color:var(--muted)}
+.use{margin:0 0 14px;text-align:center;font-size:.85rem;color:var(--muted)}
+.tiles{display:grid;gap:12px}
+.tile{display:flex;align-items:center;gap:14px;width:100%;text-align:left;background:var(--card);border:2px solid var(--line);border-radius:20px;padding:16px;min-height:76px;transition:transform .2s cubic-bezier(.3,1.6,.5,1),border-color .2s}
+.tile:hover{border-color:var(--accent);transform:translateY(-2px)}
+.tile:active{transform:scale(.98)}
+.ic{flex:none;width:48px;height:48px;border-radius:14px;display:grid;place-items:center;font-size:1.5rem;background:color-mix(in srgb,var(--accent) 16%,transparent)}
+.tile strong{display:block;font-size:1.1rem}
+.tile small{color:var(--muted);font-size:.9rem}
+.back{background:none;border:0;color:var(--accent);font-weight:600;padding:8px 4px;min-height:44px}
+h2{margin:4px 0 12px;font-size:1.4rem}
+.row{display:flex;align-items:center;gap:10px;background:var(--card);border:2px solid var(--line);border-radius:16px;padding:6px 8px 6px 14px;margin-bottom:8px}
+.row .t{flex:1;min-width:0;overflow-wrap:anywhere;font-weight:500;background:none;border:0;text-align:left;min-height:44px;padding:0;text-transform:capitalize}
+.row .t small{display:block;color:var(--muted);font-weight:400;text-transform:none}
+.sq{min-width:44px;height:44px;flex:none;border-radius:12px;border:2px solid var(--line);background:var(--card);display:grid;place-items:center;font-size:1.1rem;padding:0 6px}
+.sq[aria-pressed="true"]{background:var(--sun);border-color:var(--sun)}
+.sq.warn{background:var(--no);border-color:var(--no);color:#fff;font-size:.85rem}
+.btn{background:var(--accent);color:#fff;border:0;border-radius:14px;padding:10px 18px;min-height:46px;font-weight:600}
+.btn.alt{background:var(--card);color:var(--ink);border:2px solid var(--line)}
+.bar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+.bar input[type=text]{flex:1;min-width:0;font:inherit;color:var(--ink);background:var(--card);border:2px solid var(--line);border-radius:14px;padding:10px 14px;min-height:46px}
+.file{display:inline-flex;align-items:center;cursor:pointer}
+.file input{position:absolute;width:1px;height:1px;opacity:0}
+.note{background:color-mix(in srgb,var(--sun) 30%,transparent);border-radius:14px;padding:10px 14px;margin-bottom:12px;font-size:.95rem}
+.empty,.cnt{color:var(--muted);text-align:center;padding:20px 8px;margin:0}
+.cnt{padding:4px 0 10px;font-size:.9rem}
+.top{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.pos{font-weight:600;color:var(--muted)}
+.qcard{display:block;width:100%;text-align:center;background:var(--card);border:2px solid var(--line);border-radius:26px;padding:30px 18px 22px;overflow:hidden}
+.qcard .nm{display:block;font-size:clamp(1.8rem,8vw,2.6rem);font-weight:700;line-height:1.15;overflow-wrap:anywhere;text-transform:capitalize}
+.qcard .tap{display:block;margin-top:12px;color:var(--muted);font-size:.95rem}
+.rv{display:grid;grid-template-rows:0fr;transition:grid-template-rows .55s cubic-bezier(.3,1.1,.4,1)}
+.qcard.open .rv{grid-template-rows:1fr}
+.rv>span{display:block;overflow:hidden;min-height:0}
+.rv img{display:block;width:100%;max-height:48vh;object-fit:contain;border-radius:16px;margin-top:16px;opacity:0;transform:scale(1.2) rotate(-2deg);filter:blur(10px);transition:opacity .5s .1s,transform .7s .05s cubic-bezier(.2,.9,.3,1),filter .6s .05s}
+.qcard.open .rv img{opacity:1;transform:none;filter:none;cursor:zoom-in}
+.judge{position:sticky;bottom:0;display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:16px 0 calc(8px + env(safe-area-inset-bottom,0px));margin-top:8px;background:linear-gradient(transparent,var(--bg) 30%)}
+.judge button{border:0;border-radius:16px;min-height:56px;font-weight:600;color:#fff;transition:opacity .2s,transform .12s}
+.judge button:active:not(:disabled){transform:scale(.96)}
+.judge .y{background:var(--ok)}.judge .n{background:var(--no)}
+.judge button:disabled{opacity:.35;cursor:not-allowed}
+.score{text-align:center;padding:24px 0}
+.score .big{font-size:4rem;font-weight:700;color:var(--accent);line-height:1}
+.score p{color:var(--muted);margin:6px 0}
+.acts{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+#vw{position:fixed;inset:0;z-index:50;background:#000;display:grid;place-items:center;overflow:hidden;touch-action:none}
+#vw[hidden]{display:none}
+#vi{max-width:100vw;max-height:100vh;object-fit:contain;transform-origin:center;user-select:none;-webkit-user-drag:none;will-change:transform}
+.vbar{position:absolute;top:0;left:0;right:0;display:flex;gap:8px;align-items:center;padding:calc(env(safe-area-inset-top,0px) + 10px) 12px 10px;color:#fff;font-size:.85rem;z-index:2}
+.vbar span{flex:1;opacity:.75}
+.vbar .chip{background:rgba(255,255,255,.16);color:#fff;border-color:rgba(255,255,255,.35)}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{transition-duration:.01ms!important}}
+</style>
+</head>
+<body>
+<main>
+  <div class="hd"><div class="logo">Pic<b>Quiz</b></div><button class="chip" id="theme"></button></div>
+  <div id="app"></div>
+</main>
+<div id="vw" hidden>
+  <div class="vbar"><span>Pinch or double-tap to zoom</span><button class="chip" id="vm" aria-label="Zoom out">−</button><button class="chip" id="vp" aria-label="Zoom in">+</button><button class="chip" id="vx">✕ close</button></div>
+  <img id="vi" alt="Full screen image">
+</div>
+<script>
+const $=s=>document.querySelector(s),app=$('#app'),vw=$('#vw'),vi=$('#vi');
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const uid=()=>Math.random().toString(36).slice(2,10);
+let S={folders:[],imgs:[]},view={n:'home'},play=null,note='',cur=null,vurl=null,DB=null;
+
+/* storage: every image is its own record, so saving stays fast at 5,000+ */
+const openDB=()=>new Promise((ok,bad)=>{const r=indexedDB.open('picquiz2',1);r.onupgradeneeded=()=>{const d=r.result;d.createObjectStore('meta',{keyPath:'id'});d.createObjectStore('blobs');d.createObjectStore('folders',{keyPath:'id'})};r.onsuccess=()=>ok(r.result);r.onerror=()=>bad(r.error)});
+const done=t=>new Promise((ok,bad)=>{t.oncomplete=ok;t.onerror=t.onabort=()=>bad(t.error)});
+const all=st=>new Promise(ok=>{const q=DB.transaction(st).objectStore(st).getAll();q.onsuccess=()=>ok(q.result);q.onerror=()=>ok([])});
+const getBlob=id=>new Promise(ok=>{const q=DB.transaction('blobs').objectStore('blobs').get(id);q.onsuccess=()=>ok(q.result);q.onerror=()=>ok(null)});
+async function putImg(m,b){const t=DB.transaction(['meta','blobs'],'readwrite');t.objectStore('meta').put(m);t.objectStore('blobs').put(b,m.id);await done(t)}
+const putMeta=m=>{try{DB.transaction('meta','readwrite').objectStore('meta').put(m)}catch(e){}};
+async function delImgs(ids){const t=DB.transaction(['meta','blobs'],'readwrite');ids.forEach(i=>{t.objectStore('meta').delete(i);t.objectStore('blobs').delete(i)});await done(t)}
+async function putFolder(f){const t=DB.transaction('folders','readwrite');t.objectStore('folders').put(f);await done(t)}
+async function delFolder(id){const t=DB.transaction('folders','readwrite');t.objectStore('folders').delete(id);await done(t)}
+
+function art(e,a,b){return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="'+a+'"/><stop offset="1" stop-color="'+b+'"/></linearGradient></defs><rect width="400" height="300" fill="url(#g)"/><circle cx="335" cy="60" r="70" fill="#fff" opacity=".3"/><circle cx="55" cy="275" r="95" fill="#fff" opacity=".25"/><text x="200" y="195" font-size="140" text-anchor="middle">'+e+'</text></svg>'}
+async function seed(){
+  const f={id:uid(),name:'Sample pics'};await putFolder(f);S.folders.push(f);
+  for(const x of [["sleepy fox","🦊","#FFB36B","#FF6B6B"],["moon picnic","🌙","#3B2F8F","#8C78FF"],["tiny volcano","🌋","#FF8A5B","#C23B5A"],["rocket snack","🚀","#1FB8A6","#2B5BD7"],["jelly ocean","🪼","#37B6FF","#5B3DF5"],["cactus disco","🌵","#FF5FA2","#FFC933"]]){
+    const m={id:uid(),folder:f.id,name:x[0],bm:false};await putImg(m,new Blob([art(x[1],x[2],x[3])],{type:'image/svg+xml'}));S.imgs.push(m)}
+}
+/* resize big photos to 1600px so text stays readable but storage stays small */
+const toBlob=f=>new Promise(ok=>{const u=URL.createObjectURL(f),im=new Image();
+  im.onload=()=>{const k=Math.min(1,1600/Math.max(im.width,im.height)),c=document.createElement('canvas');c.width=Math.round(im.width*k);c.height=Math.round(im.height*k);const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);x.drawImage(im,0,0,c.width,c.height);URL.revokeObjectURL(u);c.toBlob(b=>{c.width=c.height=0;ok(b)},'image/jpeg',.85)};
+  im.onerror=()=>{URL.revokeObjectURL(u);ok(null)};im.src=u});
+const cleanName=fn=>fn.replace(/\.[^.]+$/,'').replace(/[-_]+/g,' ').trim()||'untitled';
+const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+const img=id=>S.imgs.find(x=>x.id===id);
+const inF=id=>S.imgs.filter(x=>x.folder===id);
+
+function go(n,extra){view=Object.assign({n,q:'',pg:1},extra||{});render();window.scrollTo(0,0)}
+function start(list,label){
+  if(!list.length){note='Nothing to play yet. Add some images first.';return go(view.n,view)}
+  play={q:shuffle(list.map(x=>x.id)),i:0,ok:[],no:[],label};go('play');
+}
+async function loadCur(){
+  const id=play.q[play.i],b=await getBlob(id);
+  if(!b||!play||play.q[play.i]!==id)return;
+  if(cur)URL.revokeObjectURL(cur);cur=URL.createObjectURL(b);
+  const im=$('#qi');if(im)im.src=cur;
+}
+function fillList(){
+  const q=view.q.toLowerCase();
+  const l=inF(view.id).filter(x=>x.name.toLowerCase().includes(q)).sort((a,b)=>a.name.localeCompare(b.name));
+  const sh=l.slice(0,view.pg*50);
+  $('#fl').innerHTML=(l.length?`<p class="cnt">${l.length} images</p>`:'<p class="empty">Nothing here yet. Add images and their file names become the quiz prompts.</p>')
+    +sh.map(x=>`<div class="row"><button class="t" data-a="see" data-id="${x.id}">${esc(x.name)}</button><button class="sq" data-a="bm" data-id="${x.id}" aria-pressed="${x.bm}" aria-label="Bookmark ${esc(x.name)}">🔖</button><button class="sq" data-a="deli" data-id="${x.id}" aria-label="Delete ${esc(x.name)}">🗑</button></div>`).join('')
+    +(l.length>sh.length?'<button class="btn alt" data-a="more" style="width:100%">show more</button>':'');
+}
+
+function render(){
+  let h=note?`<div class="note">${esc(note)}</div>`:'';note='';
+  const n=view.n;
+  if(n==='home'){
+    const bm=S.imgs.filter(x=>x.bm).length;
+    h+=`<div class="stats"><div class="stat"><b>${S.imgs.length}</b><span>images</span></div><div class="stat"><b>${S.folders.length}</b><span>folders</span></div><div class="stat"><b>${bm}</b><span>bookmarked</span></div></div><p class="use" id="use"></p>
+    <div class="tiles">
+    <button class="tile" data-a="go" data-id="folders"><span class="ic">📁</span><span><strong>Manage folders</strong><small>Create folders &amp; add images</small></span></button>
+    <button class="tile" data-a="go" data-id="pick"><span class="ic">▶️</span><span><strong>Play quiz</strong><small>Pick a folder to quiz yourself</small></span></button>
+    <button class="tile" data-a="go" data-id="marks"><span class="ic">🔖</span><span><strong>Bookmarks</strong><small>Review &amp; play saved images</small></span></button>
+    <button class="tile" data-a="all"><span class="ic">⚡</span><span><strong>Play all</strong><small>Quiz across every folder</small></span></button></div>`;
+  }else if(n==='folders'){
+    h+=`<button class="back" data-a="go" data-id="home">← back</button><h2>Folders</h2>
+    <div class="bar"><input type="text" id="fname" placeholder="New folder name" maxlength="40" aria-label="New folder name"><button class="btn" data-a="mkf">+ create</button></div>`;
+    h+=S.folders.length?S.folders.map(f=>`<div class="row"><button class="t" data-a="open" data-id="${f.id}">📂 ${esc(f.name)}<small>${inF(f.id).length} images</small></button><button class="sq${view.del===f.id?' warn':''}" data-a="delf" data-id="${f.id}" aria-label="Delete ${esc(f.name)}">${view.del===f.id?'Sure?':'🗑'}</button></div>`).join(''):'<p class="empty">No folders yet. Create one to start adding images.</p>';
+  }else if(n==='folder'){
+    const f=S.folders.find(x=>x.id===view.id);if(!f)return go('folders');
+    h+=`<button class="back" data-a="go" data-id="folders">← back to folders</button><h2>${esc(f.name)}</h2>
+    <div class="bar"><label class="btn file">⬆ add images<input type="file" id="up" accept="image/*" multiple></label><button class="btn alt" data-a="playf" data-id="${f.id}">▶ play</button></div>
+    <div class="note" id="prog" hidden></div>
+    <div class="bar"><input type="text" id="q" placeholder="Search names" value="${esc(view.q)}" aria-label="Search names"></div><div id="fl"></div>`;
+  }else if(n==='pick'){
+    h+=`<button class="back" data-a="go" data-id="home">← back</button><h2>Choose a folder to play</h2>`;
+    h+=S.folders.length?S.folders.map(f=>`<button class="tile" style="margin-bottom:10px" data-a="playf" data-id="${f.id}"><span class="ic">📂</span><span><strong>${esc(f.name)}</strong><small>${inF(f.id).length} images</small></span></button>`).join(''):'<p class="empty">No folders yet.</p>';
+  }else if(n==='marks'){
+    const l=S.imgs.filter(x=>x.bm).sort((a,b)=>a.name.localeCompare(b.name));
+    h+=`<button class="back" data-a="go" data-id="home">← back</button><h2>Bookmarks</h2>`;
+    h+=l.length?`<div class="bar"><button class="btn" data-a="playm">▶ play this set</button></div>`+l.slice(0,view.pg*50).map(x=>`<div class="row"><button class="t" data-a="see" data-id="${x.id}">${esc(x.name)}</button><button class="sq" data-a="bm" data-id="${x.id}" aria-pressed="true" aria-label="Remove bookmark">🔖</button></div>`).join('')+(l.length>view.pg*50?'<button class="btn alt" data-a="more" style="width:100%">show more</button>':''):'<p class="empty">Nothing saved yet. Bookmark images while you play or in a folder.</p>';
+  }else if(n==='play'){
+    const x=img(play.q[play.i]),t=play.q.length;
+    h+=`<div class="top"><button class="back" data-a="quit">← back</button><span class="pos">${play.i+1} / ${t}</span><button class="sq" data-a="pbm" aria-pressed="${x.bm}" aria-label="Bookmark this image">🔖</button></div>
+    <button class="qcard" id="qc" data-a="rev"><span class="nm">${esc(x.name)}</span><span class="tap" id="tp">Guess what it looks like, then tap to check</span><span class="rv"><span><img id="qi" alt="${esc(x.name)}"></span></span></button>
+    <div class="judge"><button class="y" id="jy" data-a="ok" disabled>Recalled</button><button class="n" id="jn" data-a="no" disabled>Not even close</button></div>`;
+  }else if(n==='result'){
+    const t=play.q.length,k=play.ok.length,p=Math.round(k/t*100);
+    h+=`<div class="score"><div class="big">${k}</div><p>out of ${t}</p><p><b>${p}%</b> recalled</p></div>
+    <div class="acts"><button class="btn alt" data-a="go" data-id="home">home</button>${play.no.length?'<button class="btn alt" data-a="retry">retry missed</button>':''}<button class="btn" data-a="again">play again</button></div>`;
+  }
+  app.innerHTML=h;
+  if(n==='folder')fillList();
+  if(n==='play')loadCur();
+  if(n==='home'&&navigator.storage&&navigator.storage.estimate)navigator.storage.estimate().then(e=>{const u=$('#use');if(u&&e.quota)u.textContent='Storage used: '+Math.round(e.usage/1048576)+' MB of '+Math.round(e.quota/1048576)+' MB'}).catch(()=>{});
+}
+
+app.onclick=async e=>{
+  const t=e.target.closest('[data-a]');if(!t||t.disabled)return;
+  const a=t.dataset.a,id=t.dataset.id;
+  if(a==='go')go(id);
+  else if(a==='all')start(S.imgs,'all');
+  else if(a==='open')go('folder',{id});
+  else if(a==='playf')start(inF(id),id);
+  else if(a==='playm')start(S.imgs.filter(x=>x.bm),'marks');
+  else if(a==='more'){view.pg++;view.n==='folder'?fillList():render()}
+  else if(a==='mkf'){const v=$('#fname').value.trim();if(!v){note='Give the folder a name first.';return render()}const f={id:uid(),name:v};S.folders.push(f);await putFolder(f);render()}
+  else if(a==='delf'){
+    if(view.del!==id){view.del=id;return render()}
+    const ids=inF(id).map(x=>x.id);S.imgs=S.imgs.filter(x=>x.folder!==id);S.folders=S.folders.filter(f=>f.id!==id);view.del=null;
+    await delImgs(ids);await delFolder(id);render()}
+  else if(a==='deli'){S.imgs=S.imgs.filter(x=>x.id!==id);delImgs([id]);fillList()}
+  else if(a==='bm'){const x=img(id);x.bm=!x.bm;putMeta(x);view.n==='folder'?fillList():render()}
+  else if(a==='pbm'){const x=img(play.q[play.i]);x.bm=!x.bm;putMeta(x);t.setAttribute('aria-pressed',x.bm)}
+  else if(a==='see'){const b=await getBlob(id);if(b){vurl=URL.createObjectURL(b);openV(vurl)}}
+  else if(a==='quit'){if(cur){URL.revokeObjectURL(cur);cur=null}go('home')}
+  else if(a==='rev'){
+    if(t.classList.contains('open')){if(cur)openV(cur);return}
+    t.classList.add('open');$('#jy').disabled=false;$('#jn').disabled=false;$('#tp').textContent='Tap the image to view it full screen'}
+  else if(a==='ok'||a==='no'){
+    play[a].push(play.q[play.i]);
+    if(play.i+1>=play.q.length)go('result');else{play.i++;render()}}
+  else if(a==='again')start(play.q.map(img).filter(Boolean),play.label);
+  else if(a==='retry')start(play.no.map(img).filter(Boolean),play.label);
+};
+app.oninput=e=>{if(e.target.id==='q'){view.q=e.target.value;view.pg=1;fillList()}};
+app.onchange=async e=>{
+  if(e.target.id!=='up')return;
+  const files=[...e.target.files],fid=view.id;e.target.value='';
+  const have=new Set(inF(fid).map(x=>x.name.toLowerCase()));
+  const pg=$('#prog');pg.hidden=false;
+  let add=0,skip=0,bad=0,full=false;
+  for(let i=0;i<files.length;i++){
+    const nm=cleanName(files[i].name);
+    pg.textContent='Adding '+(i+1)+' / '+files.length+'… keep this page open';
+    if(have.has(nm.toLowerCase())){skip++;continue}
+    const b=await toBlob(files[i]);if(!b){bad++;continue}
+    const m={id:uid(),folder:fid,name:nm,bm:false};
+    try{await putImg(m,b);S.imgs.push(m);have.add(nm.toLowerCase());add++}
+    catch(err){bad++;if(err&&err.name==='QuotaExceededError'){full=true;break}}
+  }
+  note='Added '+add+(skip?', skipped '+skip+' duplicate names':'')+(bad?', '+bad+' failed':'')+'.'+(full?' Storage is full, so the rest were not added.':'');
+  render();
+};
+
+/* full-screen viewer: pinch, double-tap, wheel, +/- */
+let Z={s:1,x:0,y:0},ptrs=new Map(),last=0,startD=1,startS=1;
+const ap=()=>{vi.style.transform='translate('+Z.x+'px,'+Z.y+'px) scale('+Z.s+')'};
+const dist=()=>{const a=[...ptrs.values()];return Math.hypot(a[0].x-a[1].x,a[0].y-a[1].y)||1};
+function clamp(){const mx=Math.max(0,(vi.offsetWidth*Z.s-innerWidth)/2),my=Math.max(0,(vi.offsetHeight*Z.s-innerHeight)/2);Z.x=Math.max(-mx,Math.min(mx,Z.x));Z.y=Math.max(-my,Math.min(my,Z.y));if(Z.s<=1){Z.x=Z.y=0}}
+function zoom(s){Z.s=Math.max(1,Math.min(6,s));clamp();ap()}
+function openV(src){vi.src=src;Z={s:1,x:0,y:0};ap();vw.hidden=false;$('#vx').focus()}
+function closeV(){vw.hidden=true;vi.removeAttribute('src');ptrs.clear();if(vurl){URL.revokeObjectURL(vurl);vurl=null}}
+vw.onpointerdown=e=>{
+  if(e.target.closest('.vbar'))return;
+  ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY});try{vw.setPointerCapture(e.pointerId)}catch(_){}
+  if(ptrs.size===2){startD=dist();startS=Z.s}
+  const now=Date.now();
+  if(ptrs.size===1&&now-last<300){zoom(Z.s>1?1:2.5)}
+  last=now;
+};
+vw.onpointermove=e=>{
+  const p=ptrs.get(e.pointerId);if(!p)return;
+  const dx=e.clientX-p.x,dy=e.clientY-p.y;ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY});
+  if(ptrs.size>=2)Z.s=Math.max(1,Math.min(6,startS*dist()/startD));
+  else if(Z.s>1){Z.x+=dx;Z.y+=dy}
+  clamp();ap();
+};
+vw.onpointerup=vw.onpointercancel=e=>{ptrs.delete(e.pointerId)};
+vw.addEventListener('wheel',e=>{e.preventDefault();zoom(Z.s*(e.deltaY<0?1.2:.83))},{passive:false});
+$('#vp').onclick=()=>zoom(Z.s*1.5);$('#vm').onclick=()=>zoom(Z.s/1.5);$('#vx').onclick=closeV;
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!vw.hidden)closeV()});
+
+/* theme */
+const tb=$('#theme'),root=document.documentElement;
+const dark=()=>root.dataset.theme?root.dataset.theme==='dark':matchMedia('(prefers-color-scheme: dark)').matches;
+const lab=()=>{tb.textContent=dark()?'☀️ light mode':'🌙 dark mode'};
+tb.onclick=()=>{root.dataset.theme=dark()?'light':'dark';lab()};
+lab();
+
+(async()=>{
+  try{DB=await openDB()}catch(e){app.innerHTML='<div class="note">This browser is blocking local storage, so PicQuiz cannot save images here. Try a normal (non-private) tab.</div>';return}
+  try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist()}catch(e){}
+  S.folders=await all('folders');S.imgs=await all('meta');
+  if(!S.folders.length&&!S.imgs.length)await seed();
+  render();
+})();
+</script>
+</body>
+</html>
